@@ -11,6 +11,7 @@ from netspeed.measure import (
     measure,
     summarize,
 )
+from netspeed.report import render
 
 ENV_REQUESTS = "NETSPEED_REQUESTS"
 ENV_COOLDOWN = "NETSPEED_COOLDOWN"
@@ -66,7 +67,7 @@ def main(argv: list[str] | None = None) -> int:
         print(exc, file=sys.stderr)
         return 2
     summary = summarize(samples)
-    sys.stdout.write(_render_text(summary))
+    sys.stdout.write(render(summary, settings.output))
     return 0
 
 
@@ -164,20 +165,6 @@ def _reject_out_of_range(args: argparse.Namespace) -> None:
         raise ConfigError("таймаут соединения должен быть больше нуля")
     if args.warmup < 0:
         raise ConfigError("прогрев не может быть отрицательным")
-
-
-def _render_text(summary: object) -> str:
-    """Interim printer. The report module replaces this in the next step."""
-    from netspeed.measure import Summary
-
-    if not isinstance(summary, Summary):
-        raise TypeError("expected a measurement summary")
-    return (
-        f"Запросов: {summary.requested} (успешно {summary.succeeded})\n"
-        f"Среднее время: {summary.average_seconds:.3f} с\n"
-        f"Скачано: {summary.downloaded_megabytes:.2f} МБ\n"
-        f"Скорость: {summary.megabytes_per_second:.2f} МБ/с\n"
-    )
 
 
 def _env_str(name: str, default: str) -> str:
