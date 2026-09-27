@@ -99,7 +99,7 @@ def measure(
     total_runs = warmup + requests
     try:
         for index in range(total_runs):
-            sample = _download_once(client, url, clock)
+            sample = _download_once(client, url, clock, user_agent)
             if not sample.ok and on_error == "fail":
                 raise MeasureError(sample.error or "request failed")
             if index >= warmup:
@@ -112,10 +112,15 @@ def measure(
             client.close()
 
 
-def _download_once(client: httpx.Client, url: str, clock: Callable[[], float]) -> Sample:
+def _download_once(
+    client: httpx.Client,
+    url: str,
+    clock: Callable[[], float],
+    user_agent: str,
+) -> Sample:
     started = clock()
     try:
-        with client.stream("GET", url) as response:
+        with client.stream("GET", url, headers={"User-Agent": user_agent}) as response:
             response.raise_for_status()
             total = 0
             for chunk in response.iter_bytes():
