@@ -104,6 +104,14 @@ def test_invalid_environment_exits_with_usage_error(
     assert "NETSPEED_REQUESTS" in capsys.readouterr().err
 
 
+def test_help_is_readable_russian(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as caught:
+        main(["--help"])
+
+    assert caught.value.code == 0
+    assert "Последовательно скачивает" in capsys.readouterr().out
+
+
 def test_url_is_required() -> None:
     with pytest.raises(SystemExit) as caught:
         main([])

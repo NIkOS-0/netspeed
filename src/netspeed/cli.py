@@ -44,6 +44,7 @@ class Settings:
 
 def main(argv: list[str] | None = None) -> int:
     """Measure ``url`` and print the summary. Returns a process exit code."""
+    configure_output()
     try:
         settings = parse_settings(argv)
     except ConfigError as exc:
@@ -69,6 +70,26 @@ def main(argv: list[str] | None = None) -> int:
     summary = summarize(samples)
     sys.stdout.write(render(summary, settings.output))
     return 0
+
+
+def configure_output() -> None:
+    """Print Russian text as UTF-8, including in the Windows console."""
+    if sys.platform == "win32":
+        try:
+            import ctypes
+
+            ctypes.windll.kernel32.SetConsoleOutputCP(65001)
+            ctypes.windll.kernel32.SetConsoleCP(65001)
+        except (AttributeError, OSError):
+            pass
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8")
+        except (OSError, ValueError):
+            continue
 
 
 def parse_settings(argv: list[str] | None = None) -> Settings:
